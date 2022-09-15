@@ -1,0 +1,33 @@
+# SPDX-FileCopyrightText:  Copyright © 2022 The Fern Authors <team@fernproxy.io>
+# SPDX-License-Identifier: Apache-2.0
+
+[package]
+name = "fern-protocol-mongodb"
+license = "Apache-2.0"
+version = "0.0.0"
+documentation = "https://docs.rs/fern-protocol-mongodb/0.0.0/"
+repository = "https://github.com/fern-proxy/fern-proxy/"
+homepage = "https://fernproxy.io/"
+description = "Empty crate, used only to reserve the name."
+rust-version = "1.63"
+edition = "2021"
+categories = ["network-programming", "data-structures", "encoding"]
+keywords = ["fern", "proxy", "database", "protocol", "mongodb"]
+authors = [
+    "Piotr PAWLICKI <piotrek@seovya.net>",
+]
+
+# Not yet :-)
+publish = false
+# When releasing to crates.io:
+# * remove `path` dependencies
+# * update documentation URLs
+#   -> Cargo.toml
+#   -> README.md
+# * update CHANGELOG.md
+# * create "vMAJOR.MINOR.PATCH" git tag (https://semver.org/)
+
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]

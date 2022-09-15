@@ -1,0 +1,40 @@
+# SPDX-FileCopyrightText:  Copyright © 2022 The Fern Authors <team@fernproxy.io>
+# SPDX-License-Identifier: Apache-2.0
+
+[workspace]
+
+members = [
+  "fern-proxy",
+
+  "fern-proxy-interfaces",
+
+  "fern-policy-engine",
+
+  "fern-encryption/embedded",
+  "fern-encryption/vault",
+
+  "fern-masking/embedded",
+
+  "fern-tokenization/embedded",
+
+  "fern-telemetry",
+
+  "fern-wire-protocols/arangodb",
+  "fern-wire-protocols/bigquery",
+  "fern-wire-protocols/bolt",
+  "fern-wire-protocols/dgraph",
+  "fern-wire-protocols/druidsql",
+  "fern-wire-protocols/dynamodb",
+  "fern-wire-protocols/firestore",
+  "fern-wire-protocols/foundationdb",
+  "fern-wire-protocols/graphql",
+  "fern-wire-protocols/memcached",
+  "fern-wire-protocols/mongodb",
+  "fern-wire-protocols/mysql",
+  "fern-wire-protocols/ngql",
+  "fern-wire-protocols/postgresql",
+  "fern-wire-protocols/redis",
+  "fern-wire-protocols/reql",
+  "fern-wire-protocols/s3",
+  "fern-wire-protocols/snowflake",
+  "fern-wire-protocols/trino",]

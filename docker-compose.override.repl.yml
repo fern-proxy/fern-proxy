@@ -1,0 +1,13 @@
+# SPDX-FileCopyrightText:  Copyright © 2022 The Fern Authors <team@fernproxy.io>
+# SPDX-License-Identifier: Apache-2.0
+
+version: "3.8"
+
+services:
+  fern-proxy:
+    user: ${CURRENT_USER}
+    volumes:
+      - type: bind
+        source: .
+        target: /app/
+    command: [ "cargo", "watch", "-x", "run" ]
