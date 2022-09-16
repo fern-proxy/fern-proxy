@@ -18,6 +18,11 @@ CMD [ "./fern-proxy" ]
 
 FROM rust:1.63-slim AS dev-env
 
+# Required by `openssl-sys` crate, a dependency for `grcov`
+RUN apt-get update \
+        && apt-get install -y --no-install-recommends cmake libssl-dev pkg-config \
+        && rm -rf /var/lib/apt/lists/*
+
 # Required for standard code formatting
 RUN rustup component add rustfmt
 
