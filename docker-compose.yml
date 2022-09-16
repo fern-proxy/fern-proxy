@@ -6,6 +6,7 @@ version: "3.8"
 services:
   fern-proxy:
     image: fern-proxy:latest
+    container_name: fern-proxy
     build:
       context: .
       dockerfile: Dockerfile
@@ -18,6 +19,20 @@ services:
         mode: overlay
     networks:
       - with-fern-proxy
+    depends_on:
+      - postgres-server
+
+  postgres-server:
+    image: postgres
+    container_name: postgres-server
+    restart: always
+    networks:
+      - with-fern-proxy
+    environment:
+      - POSTGRES_DB=testdb
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=testpassword
+
 
 networks:
   with-fern-proxy:
