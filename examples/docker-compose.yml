@@ -1,0 +1,46 @@
+# SPDX-FileCopyrightText:  Copyright © 2022 The Fern Authors <team@fernproxy.io>
+# SPDX-License-Identifier: Apache-2.0
+
+version: "3.8"
+
+services:
+  fern-proxy:
+    image: fern-proxy:latest
+    container_name: fern-proxy
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      target: release-env
+    ports:
+      - target: 30000
+        published: 30000
+        protocol: tcp
+        mode: overlay
+    networks:
+      - with-fern-proxy
+    depends_on:
+      - postgres-server
+    environment:
+      - SERVER=postgres-server:5432
+      - RUST_LOG=info
+
+  postgres-server:
+    image: postgres
+    container_name: postgres-server
+    restart: always
+    networks:
+      - with-fern-proxy
+    environment:
+      - POSTGRES_DB=testdb
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=testpassword
+
+  postgres-client:
+    image: postgres
+    container_name: postgres-client
+    command: /bin/bash -c 'while true; do echo POSTGRES CLIENT is up; sleep 60; done'
+    networks:
+      - with-fern-proxy
+
+networks:
+  with-fern-proxy:
