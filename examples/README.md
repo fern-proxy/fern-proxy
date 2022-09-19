@@ -6,27 +6,28 @@ SPDX-License-Identifier: Apache-2.0
 # Example
 
 At the moment there is only one basic example, which showcases a _dummy_ data
-masking feature for a PostgreSQL datastore. While simple in appearance, a full
-Query/Response cycle is demonstrated, will **all** data rows being processed.
+masking feature for a PostgreSQL datastore.  
+While simple in appearance, a full Query/Response cycle is demonstrated, with
+**all** data rows being processed.
 
-The dummy data masking transformation is replacing every 'o' with an '*'.
+The dummy data masking transformation is replacing every `o` with an `*`.  
 It is kind of a worse case scenario as the masking is applied to _every_ single
 field in _each_ row, without filtering on column names by choice, parsing every
-byte of every DataRow returned as response, etc. Really terrible design. :-)
+byte of every DataRow returned as response, etc. Really a terrible design. :-)
 
 
 ## Architecture
 
 This example spawns three containers:
 
-* a PostgreSQL server, our datastore
-* a PostgreSQL client, we will simply be using `psql`
-* a Fern proxy, sitting between the PostgreSQL server and `psql`
+* a PostgreSQL server, our datastore,
+* a PostgreSQL client, we will simply be using `psql`,
+* a Fern proxy, sitting between the PostgreSQL server and `psql`.
 
 ```
-        +-------+       +------------+       +-----------------+
-        | psqgl | <---> | fern-proxy | <---> | postgres-server |
-        +-------+       +------------+       +-----------------+
+        +------+       +------------+       +-----------------+
+        | psql | <---> | fern-proxy | <---> | postgres-server |
+        +------+       +------------+       +-----------------+
 ```
 
 
