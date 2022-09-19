@@ -37,7 +37,10 @@ Same goes for deployment and optimizations leveraging DaemonSets and eBPF.
 
 ## Quickstart
 
-Fern proxy follows the [_Gazr_](https://gazr.io) approach, to ease
+If you are looking for a quick demo to see Fern proxy in action, you can
+go directly to the [examples](examples/) directory!
+
+Otherwise, Fern proxy follows the [_Gazr_](https://gazr.io) approach, to ease
 evaluation, on-boarding, and development.
 
 Most useful commands:
