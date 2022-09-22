@@ -45,6 +45,11 @@ features = []
 version = "0.1"
 path = "../fern-wire-protocols/postgresql"
 
+[dependencies.config]
+default-features = false
+features = ["toml"]
+version = "0.13"
+
 [dependencies.env_logger]
 version = "*"
 

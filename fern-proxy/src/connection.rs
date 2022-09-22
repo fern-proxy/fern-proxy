@@ -6,7 +6,7 @@ use tokio::net::TcpStream;
 use tokio::sync::mpsc;
 
 use crate::pipe::{Direction, Pipe, ShortCircuit};
-use fern_masking::DummyHandler;
+use fern_masking::{DataMaskingHandler, PassthroughHandler, SQLHandlerConfig};
 use fern_protocol_postgresql::codec::{backend, frontend};
 
 //TODO(ppiotr3k): write description
@@ -19,7 +19,7 @@ pub struct Connection {
         frontend::Codec,
         frontend::Message,
         backend::Message,
-        DummyHandler,
+        PassthroughHandler<frontend::Message>,
     >,
 
     /// `Pipe` instance processing Messages from proxied Server to Client.
@@ -29,14 +29,14 @@ pub struct Connection {
         backend::Codec,
         backend::Message,
         frontend::Message,
-        DummyHandler,
+        DataMaskingHandler,
     >,
 }
 
 impl Connection {
     /// Creates a new connection for proxying provided `client_socket` and `server_socket`.
     #[rustfmt::skip]
-    pub async fn new(client_socket: TcpStream, server_socket: TcpStream) -> Connection {
+    pub async fn new(client_socket: TcpStream, server_socket: TcpStream, config: &SQLHandlerConfig) -> Connection {
         // Split the sockets to be able to `Pipe` them together.
         let (client_rx, client_tx) = client_socket.into_split();
         let (server_rx, server_tx) = server_socket.into_split();
@@ -53,6 +53,7 @@ impl Connection {
             client_rx,
             server_tx,
             forward_short,
+            config,
         );
 
         // Create `Pipe` instance for regular proxied Server -> Client Message flows.
@@ -61,6 +62,7 @@ impl Connection {
             server_rx,
             client_tx,
             backward_short,
+            config,
         );
 
         Connection {

@@ -96,7 +96,7 @@ impl Listener {
     ///
     /// Those kind of errors resolving by themselves over time, yet the process
     /// not being able to detect resolution, a backoff strategy is implemented.
-    pub async fn run(&mut self) -> crate::Result<()> {
+    pub async fn run(&mut self, config: &config::Config) -> crate::Result<()> {
         log::info!("listener is running, awaiting connections");
         loop {
             // Await for a `SemaphorePermit` to become available.
@@ -146,7 +146,7 @@ impl Listener {
             // Initialize per-connection handler state.
             let mut handler = Handler {
                 // Initialize connection state (buffered wrapper for `TcpStream`).
-                connection: Connection::new(client_socket, server_socket).await,
+                connection: Connection::new(client_socket, server_socket, config).await,
 
                 // Receive shutdown notification.
                 shutdown: Shutdown::new(self.notify_shutdown.subscribe()),
@@ -212,7 +212,12 @@ impl Listener {
 /// connection a task is spawned to handle that connection. The server runs
 /// indefinitely, until either a shutdown signal is received, or the proxied Server
 /// terminates the connection, at which point the server shuts down gracefully.
-pub async fn run(listener: TcpListener, srv_addr: &str, shutdown: impl Future) {
+pub async fn run(
+    listener: TcpListener,
+    srv_addr: &str,
+    shutdown: impl Future,
+    config: &config::Config,
+) {
     // When the provided `shutdown` future completes, i.e. shutdown signal is
     // received, the shutdown signal must be propagated to to all active connections.
     // This is implemented using a broadcast channel where only 1 message will be ever sent.
@@ -232,7 +237,7 @@ pub async fn run(listener: TcpListener, srv_addr: &str, shutdown: impl Future) {
 
     // Infinite loop, unless a critical error or shutdown signal is encountered.
     tokio::select! {
-        result = server.run() => {
+        result = server.run(config) => {
             // If an error is received here, this means that accepting
             // connections from the TCP listener failed multiple times,
             // and that the server is giving up and shutting down.

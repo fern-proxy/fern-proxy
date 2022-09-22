@@ -31,3 +31,7 @@ publish = false
 
 [dependencies.async-trait]
 version = "0.1"
+
+[dependencies.config]
+features = ["yaml"]
+version = "0.13"

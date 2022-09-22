@@ -8,7 +8,7 @@ use tokio::io::{AsyncRead, AsyncWrite, Result};
 use tokio::sync::mpsc;
 use tokio_util::codec::{Decoder, Encoder, FramedRead, FramedWrite};
 
-use fern_proxy_interfaces::{SQLMessage, SQLMessageHandler};
+use fern_proxy_interfaces::{SQLHandlerConfig, SQLMessage, SQLMessageHandler};
 
 /// Direction of Messages flow in a `Pipe`.
 #[derive(Debug)]
@@ -63,7 +63,7 @@ where
     C: Decoder + Decoder<Item = I> + Encoder<I> + Default,
     I: SQLMessage,
     S: SQLMessage,
-    H: SQLMessageHandler<I> + Default + Sync,
+    H: SQLMessageHandler<I> + Send + Sync,
 {
     ///TODO(ppiotr3k): write function description
     pub fn new(
@@ -71,13 +71,14 @@ where
         receiver: R,
         sender: W,
         short_circuit: ShortCircuit<I, S>,
+        config: &SQLHandlerConfig,
     ) -> Pipe<R, W, C, I, S, H> {
         // Adapt from `AsyncRead`/ `AsyncWrite` to `Stream`/`Sink`.
         Pipe {
             direction,
             stream: FramedRead::new(receiver, C::default()),
             sink: FramedWrite::new(sender, C::default()),
-            frame_handlers: H::default(),
+            frame_handlers: H::new(config),
             _short_circuit: short_circuit,
         }
     }

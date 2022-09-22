@@ -2,14 +2,42 @@
 // SPDX-License-Identifier: Apache-2.0
 
 use async_trait::async_trait;
-use bytes::BytesMut;
+use bytes::Bytes;
 
-use fern_protocol_postgresql::codec::{backend, frontend};
-use fern_proxy_interfaces::SQLMessageHandler;
+use fern_protocol_postgresql::codec::backend;
+use fern_proxy_interfaces::{SQLMessage, SQLMessageHandler};
 
-/// A dummy data masking Handler implemented only for demo purposes.
-#[derive(Debug, Default)]
-pub struct DummyHandler {}
+use crate::strategies::MaskingStrategy;
+
+// Re-export.
+pub use fern_proxy_interfaces::SQLHandlerConfig;
+
+/// A Handler implementing several data masking strategies.
+#[derive(Debug)]
+pub struct DataMaskingHandler {
+    state: QueryState,
+
+    /// Masking strategy applied by this Handler.
+    //TODO(ppiotr3k): investigate if `Box`-ing can be avoided
+    strategy: Box<dyn MaskingStrategy>,
+
+    /// Column names where masking will not be applied, unless forced.
+    columns_excluded: Vec<Bytes>,
+
+    /// Column names where masking will be applied, in any case.
+    /// This allows using a wildcard in exclusions, and progressively mask.
+    columns_forced: Vec<Bytes>,
+}
+
+///TODO(ppiotr3k): write description
+#[derive(Debug)]
+enum QueryState {
+    /// Awaiting for a `RowDescription` Message.
+    Description,
+
+    /// Processing `DataRow` Messages.
+    Data(Vec<usize>),
+}
 
 /// Dummy Handler for PostgreSQL backend Messages implemented for demo purposes.
 ///
@@ -19,28 +47,93 @@ pub struct DummyHandler {}
 /// byte of every DataRow returned as response, etc. Really terrible design. :-)
 //TODO(ppiotr3k): this crate should only process abstracted types
 #[async_trait]
-impl SQLMessageHandler<backend::Message> for DummyHandler {
-    async fn process(&self, msg: backend::Message) -> backend::Message {
+impl SQLMessageHandler<backend::Message> for DataMaskingHandler {
+    fn new(config: &SQLHandlerConfig) -> Self {
+        //TODO(ppiotr3k): make length configurable
+        let strategy: Box<dyn MaskingStrategy> =
+            if let Ok(strategy) = config.get::<String>("masking.strategy") {
+                match strategy.as_str() {
+                    "caviar" => Box::new(strategies::CaviarMask::new(6)),
+                    "caviar-preserve-shape" => Box::new(strategies::CaviarShapeMask::new()),
+                    _ => Box::new(strategies::CaviarMask::new(6)),
+                }
+            } else {
+                // Default strategy, if nothing is defined in `config`.
+                Box::new(strategies::CaviarMask::new(6))
+            };
+
+        let mut columns_excluded = vec![];
+        if let Ok(columns) = config.get::<Vec<String>>("masking.exclude.columns") {
+            for column_name in columns.iter() {
+                columns_excluded.push(Bytes::from(column_name.clone()));
+            }
+        }
+
+        let mut columns_forced = vec![];
+        if let Ok(columns) = config.get::<Vec<String>>("masking.force.columns") {
+            for column_name in columns.iter() {
+                columns_forced.push(Bytes::from(column_name.clone()));
+            }
+        }
+
+        Self {
+            state: QueryState::Description,
+            strategy,
+            columns_excluded,
+            columns_forced,
+        }
+    }
+
+    async fn process(&mut self, msg: backend::Message) -> backend::Message {
         match msg {
-            backend::Message::DataRow(fields) => {
-                log::trace!("!! rewriting fields: {:?}", fields);
-                let mut replaced_fields = vec![];
-                for field in fields.iter() {
-                    if !field.is_empty() {
-                        log::trace!("!! original field: {:?}", field);
-                        let mut f = BytesMut::with_capacity(field.len());
-                        f.extend_from_slice(&field[..]);
-                        let mut i = 0;
-                        //TODO(ppiotr3k): think how to make this worse but realistic
-                        while i < f.len() {
-                            if f[i] == b'o' {
-                                f[i] = b'*';
-                            }
-                            i += 1;
+            backend::Message::RowDescription(descriptions) => {
+                // Define indexes of columns to exclude from masking.
+                let mut no_mask = vec![];
+                if self.columns_excluded.len() == 1 && self.columns_excluded[0] == "*" {
+                    // Wildcard `*` translates to all indexes.
+                    // Note: `forced` columns preveil on exclusions anyway.
+                    for (idx, description) in descriptions.iter().enumerate() {
+                        if !self.columns_forced.contains(&description.name) {
+                            no_mask.push(idx);
                         }
-                        let rewriten = f.freeze();
-                        log::trace!("!! rewriten field: {:?}", rewriten);
-                        replaced_fields.push(rewriten);
+                    }
+                } else {
+                    // If no wildcard, capture columns to exclude from masking.
+                    // Note: `forced` columns preveil on exclusions anyway.
+                    for (idx, description) in descriptions.iter().enumerate() {
+                        if self.columns_excluded.contains(&description.name)
+                            && !self.columns_forced.contains(&description.name)
+                        {
+                            no_mask.push(idx);
+                        }
+                    }
+                }
+
+                // Store indexes to exclude from masking in upcoming `DataRow`s.
+                self.state = QueryState::Data(no_mask);
+                log::debug!("new masking exclusion state: {:?}", self.state);
+                backend::Message::RowDescription(descriptions)
+            }
+            backend::Message::CommandComplete(command) => {
+                // No more `DataRow`s to process, reset state.
+                self.state = QueryState::Description;
+                log::debug!("resetting masking state, awaiting next query");
+                backend::Message::CommandComplete(command)
+            }
+            backend::Message::DataRow(fields) => {
+                log::trace!("processing fields: {:?}", fields);
+                let mask = if let QueryState::Data(mask) = &self.state {
+                    mask
+                } else {
+                    panic!("unexpected state for `QueryState`");
+                };
+
+                let mut replaced_fields = vec![];
+                for (idx, field) in fields.iter().enumerate() {
+                    if !mask.contains(&idx) {
+                        log::debug!("applying masking to field #{}", idx);
+                        let rewritten = self.strategy.mask(field);
+                        replaced_fields.push(rewritten);
                     } else {
                         replaced_fields.push(field.clone());
                     }
@@ -52,14 +145,26 @@ impl SQLMessageHandler<backend::Message> for DummyHandler {
     }
 }
 
-/// Dummy Handler for PostgreSQL frontend Messages. Does nothing but passthrough.
-//TODO(ppiotr3k): refactor trait/generics so passthrough is available by default
+/// Handler used currently for PostgreSQL frontend Messages.
+/// Does nothing but passthrough.
+#[derive(Debug)]
+pub struct PassthroughHandler<M> {
+    _phantom: std::marker::PhantomData<M>,
+}
+
 #[async_trait]
-impl SQLMessageHandler<frontend::Message> for DummyHandler {
-    async fn process(&self, msg: frontend::Message) -> frontend::Message {
-        msg
+impl<M> SQLMessageHandler<M> for PassthroughHandler<M>
+where
+    M: SQLMessage,
+{
+    fn new(_config: &SQLHandlerConfig) -> Self {
+        Self {
+            _phantom: std::marker::PhantomData,
+        }
     }
 }
+
+mod strategies;
 
 #[cfg(test)]
 mod tests {
