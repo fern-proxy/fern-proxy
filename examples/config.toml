@@ -1,0 +1,21 @@
+# SPDX-FileCopyrightText:  Copyright © 2022 The Fern Authors <team@fernproxy.io>
+# SPDX-License-Identifier: Apache-2.0
+
+[masking]
+# Define data masking strategy, 'caviar' being the default:
+# - 'caviar': whatever the data, result will be a fixed-length '*' repetition,
+# - 'caviar-preserve-shape': only alphanumeric characters will be replaced with `*`.
+#strategy = 'caviar'
+strategy = 'caviar-preserve-shape'
+
+[masking.exclude]
+# Column names where masking will not be applied, unless forced.
+# A wildcard ('*') is possible here to exclude all columns from masking.
+#columns = ['Owner', 'Name', 'Access method']
+columns = ['*']
+
+[masking.force]
+# Column names where masking will be applied, in any case.
+# This allows using a wildcard in exclusions, and progressively masking columns.
+# A wildcard ('*') is not possible here, masking everything is already the default.
+columns = ['Owner', 'Name', 'Access method']

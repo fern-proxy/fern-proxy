@@ -22,7 +22,10 @@ services:
       - postgres-server
     environment:
       - SERVER=postgres-server:5432
+      - CONFIG_FILE=cfg/config.toml
       - RUST_LOG=info
+    volumes:
+      - ./:/app/cfg/
 
   postgres-server:
     image: postgres

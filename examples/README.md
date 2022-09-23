@@ -5,15 +5,19 @@ SPDX-License-Identifier: Apache-2.0
 
 # Example
 
-At the moment there is only one basic example, which showcases a _dummy_ data
-masking feature for a PostgreSQL datastore.  
-While simple in appearance, a full Query/Response cycle is demonstrated, with
-**all** data rows being processed.
+At the moment there is only one basic example, which showcases the data masking
+feature with for a PostgreSQL datastore. Two masking strategies are available.
 
-The dummy data masking transformation is replacing every `o` with an `*`.  
-It is kind of a worse case scenario as the masking is applied to _every_ single
-field in _each_ row, without filtering on column names by choice, parsing every
-byte of every DataRow returned as response, etc. Really a terrible design. :-)
+The data masking enabled in the `config.toml` configuration file applies a
+shape-preserving caviar strategy on some columns, replacing each alphanumeric
+character with a `*`, preserving therefore spacing, emptiness, and punctuation.  
+Such masking strategy isn't ideal from a privacy perspective, as it leaks both
+length and general aspect information on the original data.
+
+A fixed-length caviar strategy, not leaking such information, can be enabled by
+simply changing the `strategy` setting in the `config.toml` configuration file.
+
+Columns subject to data masking are configurable in `config.toml` as well.
 
 
 ## Architecture
@@ -56,17 +60,26 @@ This example spawns three containers:
     
        Schema   |              Name               | Type  | Owner | Persistence | Access method |    Size    | Description
     ------------+---------------------------------+-------+-------+-------------+---------------+------------+-------------
-     pg_catal*g | pg_aggregate                    | table | r**t  | permanent   | heap          | 56 kB      |
-     pg_catal*g | pg_am                           | table | r**t  | permanent   | heap          | 40 kB      |
-     pg_catal*g | pg_am*p                         | table | r**t  | permanent   | heap          | 88 kB      |
-     pg_catal*g | pg_ampr*c                       | table | r**t  | permanent   | heap          | 72 kB      |
-     pg_catal*g | pg_attrdef                      | table | r**t  | permanent   | heap          | 8192 bytes |
-     pg_catal*g | pg_attribute                    | table | r**t  | permanent   | heap          | 472 kB     |
+     pg_catalog | **_*********                    | table | ****  | permanent   | ****          | 56 kB      |
+     pg_catalog | **_**                           | table | ****  | permanent   | ****          | 40 kB      |
+     pg_catalog | **_****                         | table | ****  | permanent   | ****          | 88 kB      |
+     pg_catalog | **_******                       | table | ****  | permanent   | ****          | 72 kB      |
+     pg_catalog | **_*******                      | table | ****  | permanent   | ****          | 8192 bytes |
+     pg_catalog | **_*********                    | table | ****  | permanent   | ****          | 472 kB     |
+     pg_catalog | **_****_*******                 | table | ****  | permanent   | ****          | 40 kB      |
+     pg_catalog | **_******                       | table | ****  | permanent   | ****          | 48 kB      |
+     pg_catalog | **_*********_*********_******** | view  | ****  | permanent   |               | 0 bytes    |
+     pg_catalog | **_*********_**********         | view  | ****  | permanent   |               | 0 bytes    |
+     pg_catalog | **_*******_******_********      | view  | ****  | permanent   |               | 0 bytes    |
+     pg_catalog | **_****                         | table | ****  | permanent   | ****          | 48 kB      |
      [...]
     ```
-5. Observe the _dummy_ data masking in action on all `o` characters.
+5. Observe the data masking strategy in action on all columns defined in `config.toml`.
 
-6. Once done, dispose of this example by running:
+6. Feel free to comment/uncomment configuration directives in `config.toml`
+   to observe other available behaviors.
+
+7. Once done, dispose of this example by running:
     ```console
     $ docker-compose down --volumes
     ```
