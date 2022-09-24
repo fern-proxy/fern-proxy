@@ -16,7 +16,7 @@
 //! ## Examples
 //!
 //! ```rust
-//! use fern_protocol_postgres::codec::frontend::{Codec, Message};
+//! use fern_protocol_postgresql::codec::frontend::{Codec, Message};
 //! ```
 //!
 //! [Message Formats]: https://www.postgresql.org/docs/current/protocol-message-formats.html
