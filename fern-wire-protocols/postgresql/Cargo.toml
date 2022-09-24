@@ -12,7 +12,7 @@ description = "PostgreSQL wire protocol implementation as needed by Fern proxy."
 rust-version = "1.63"
 edition = "2021"
 categories = ["network-programming", "data-structures", "encoding"]
-keywords = ["fern", "proxy", "database", "protocol", "postgres", "postgresql"]
+keywords = ["fern", "proxy", "database", "protocol", "postgresql"]
 authors = [
     "Piotr PAWLICKI <piotrek@seovya.net>",
 ]
@@ -30,6 +30,10 @@ publish = false
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[dependencies.fern-proxy-interfaces]
+features = []
+version = "0.1"
+
 [dependencies.tokio-util]
 features = ["codec"]
 version = "0.7"
@@ -41,11 +45,6 @@ version = "1"
 features = ["release_max_level_info"]
 version = "0.4"
 
-[dependencies.fern-proxy-interfaces]
-features = []
-version = "0.1"
-path = "../../fern-proxy-interfaces"
-
 
 [dev_dependencies.tokio]
 features = []
@@ -56,4 +55,4 @@ features = ["log"]
 version = "0.2"
 
 [dev_dependencies.env_logger]
-version = "*"
+version = "0.9"
