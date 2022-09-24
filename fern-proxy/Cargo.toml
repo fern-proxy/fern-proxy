@@ -33,17 +33,14 @@ publish = false
 [dependencies.fern-masking]
 features = []
 version = "0.1"
-path = "../fern-masking/embedded"
 
 [dependencies.fern-proxy-interfaces]
 features = []
 version = "0.1"
-path = "../fern-proxy-interfaces"
 
 [dependencies.fern-protocol-postgresql]
 features = []
 version = "0.1"
-path = "../fern-wire-protocols/postgresql"
 
 [dependencies.config]
 default-features = false
@@ -51,7 +48,7 @@ features = ["toml"]
 version = "0.13"
 
 [dependencies.env_logger]
-version = "*"
+version = "0.9"
 
 [dependencies.futures]
 version = "0.3"
