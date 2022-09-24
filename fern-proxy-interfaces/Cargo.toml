@@ -33,5 +33,6 @@ publish = false
 version = "0.1"
 
 [dependencies.config]
-features = ["yaml"]
+default-features = false
+features = ["toml"]
 version = "0.13"
