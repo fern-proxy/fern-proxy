@@ -151,6 +151,14 @@ dependencies = [
 ]
 
 [[package]]
+name = "fern-authorization"
+version = "0.0.0"
+
+[[package]]
+name = "fern-authorization-opa"
+version = "0.0.0"
+
+[[package]]
 name = "fern-encryption"
 version = "0.0.0"
 

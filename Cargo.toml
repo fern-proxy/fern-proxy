@@ -10,6 +10,9 @@ members = [
 
   "fern-policy-engine",
 
+  "fern-authorization/embedded",
+  "fern-authorization/opa",
+
   "fern-encryption/embedded",
   "fern-encryption/vault",
 
