@@ -34,12 +34,10 @@ publish = false
 [dependencies.fern-protocol-postgresql]
 features = []
 version = "0.1"
-path = "../../fern-wire-protocols/postgresql"
 
 [dependencies.fern-proxy-interfaces]
 features = []
 version = "0.1"
-path = "../../fern-proxy-interfaces"
 
 [dependencies.async-trait]
 version = "0.1"
