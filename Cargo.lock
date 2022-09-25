@@ -172,8 +172,21 @@ version = "0.1.0"
 dependencies = [
  "async-trait",
  "bytes",
- "fern-protocol-postgresql",
- "fern-proxy-interfaces",
+ "fern-protocol-postgresql 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "fern-proxy-interfaces 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "log",
+]
+
+[[package]]
+name = "fern-masking"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "490fde3984ae633ba0bbf0f98afe0a3195c8f11db8e390c1869e653d335f4eab"
+dependencies = [
+ "async-trait",
+ "bytes",
+ "fern-protocol-postgresql 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "fern-proxy-interfaces 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log",
 ]
 
@@ -239,10 +252,22 @@ version = "0.1.0"
 dependencies = [
  "bytes",
  "env_logger",
- "fern-proxy-interfaces",
+ "fern-proxy-interfaces 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "log",
  "test-log",
  "tokio",
+ "tokio-util",
+]
+
+[[package]]
+name = "fern-protocol-postgresql"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5474958ae04cd2bcbe1ca26aa46ee83f36ed2a636808029a808d51a2376e4c0a"
+dependencies = [
+ "bytes",
+ "fern-proxy-interfaces 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "log",
  "tokio-util",
 ]
 
@@ -272,9 +297,9 @@ version = "0.1.0"
 dependencies = [
  "config",
  "env_logger",
- "fern-masking",
- "fern-protocol-postgresql",
- "fern-proxy-interfaces",
+ "fern-masking 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "fern-protocol-postgresql 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "fern-proxy-interfaces 0.1.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "futures",
  "log",
  "tokio",
@@ -284,6 +309,16 @@ dependencies = [
 [[package]]
 name = "fern-proxy-interfaces"
 version = "0.1.0"
+dependencies = [
+ "async-trait",
+ "config",
+]
+
+[[package]]
+name = "fern-proxy-interfaces"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9931a40ca4a49ba6ba18612925e023e5031474d60ec57727907e6ea3c780f4ba"
 dependencies = [
  "async-trait",
  "config",
