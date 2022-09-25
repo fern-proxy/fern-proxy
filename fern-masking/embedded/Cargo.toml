@@ -4,8 +4,8 @@
 [package]
 name = "fern-masking"
 license = "Apache-2.0"
-version = "0.1.0"
-documentation = "https://docs.rs/fern-masking/0.0.0/"
+version = "0.1.1"
+documentation = "https://docs.rs/fern-masking/0.1.1/"
 repository = "https://github.com/fern-proxy/fern-proxy/"
 homepage = "https://fernproxy.io/"
 description = "Embedded data masking handlers for Fern proxy."
