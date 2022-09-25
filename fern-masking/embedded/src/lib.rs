@@ -12,7 +12,13 @@ use crate::strategies::MaskingStrategy;
 // Re-export.
 pub use fern_proxy_interfaces::SQLHandlerConfig;
 
-/// A Handler implementing several data masking strategies.
+/// An `SQLMessageHandler` applying a data masking strategy.
+///
+/// The [`MaskingStrategy`] to use is set at struct instantiation,
+/// depending on settings in provided `SQLHandlerConfig`.
+///
+/// Should no settings be defined for data masking, by default a
+/// fixed-length caviar strategy will mask all `DataRow` fields.
 #[derive(Debug)]
 pub struct DataMaskingHandler {
     state: QueryState,
@@ -39,12 +45,6 @@ enum QueryState {
     Data(Vec<usize>),
 }
 
-/// Dummy Handler for PostgreSQL backend Messages implemented for demo purposes.
-///
-/// This Handler applies a dummy data masking, replacing every 'o' with an '*'.
-/// It is kind of a worse case scenario as the masking is applied to every single
-/// field in each row, without filtering on column names by choice, parsing every
-/// byte of every DataRow returned as response, etc. Really terrible design. :-)
 //TODO(ppiotr3k): this crate should only process abstracted types
 #[async_trait]
 impl SQLMessageHandler<backend::Message> for DataMaskingHandler {
@@ -91,7 +91,7 @@ impl SQLMessageHandler<backend::Message> for DataMaskingHandler {
                 let mut no_mask = vec![];
                 if self.columns_excluded.len() == 1 && self.columns_excluded[0] == "*" {
                     // Wildcard `*` translates to all indexes.
-                    // Note: `forced` columns preveil on exclusions anyway.
+                    // Note: `forced` columns prevail on exclusions anyway.
                     for (idx, description) in descriptions.iter().enumerate() {
                         if !self.columns_forced.contains(&description.name) {
                             no_mask.push(idx);
@@ -99,7 +99,7 @@ impl SQLMessageHandler<backend::Message> for DataMaskingHandler {
                     }
                 } else {
                     // If no wildcard, capture columns to exclude from masking.
-                    // Note: `forced` columns preveil on exclusions anyway.
+                    // Note: `forced` columns prevail on exclusions anyway.
                     for (idx, description) in descriptions.iter().enumerate() {
                         if self.columns_excluded.contains(&description.name)
                             && !self.columns_forced.contains(&description.name)
