@@ -27,14 +27,14 @@ parameters:
   cache-version:
     description: Cache prefix version, used for cache invalidation
     type: integer
-    default: 0
+    default: 1
 
 # Define jobs to be invoked later in workflows.
 # See: https://circleci.com/docs/2.1/configuration-reference/#jobs
 jobs:
   pre-checks:
     # Specs: https://circleci.com/product/features/resource-classes/
-    resource_class: large
+    resource_class: medium
     docker:
       # Versions: https://circleci.com/developer/images/image/cimg/rust
       - image: cimg/rust:1.63.0
@@ -192,7 +192,7 @@ jobs:
       # This is where the actual content of this CI job happens.
       - run:
           name: Run `make build` [optimized]
-          command: make buid
+          command: make build
 
 
 # Invoke jobs via workflows
