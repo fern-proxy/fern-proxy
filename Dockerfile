@@ -18,7 +18,7 @@ CMD [ "./fern-proxy" ]
 
 FROM rust:1.63-slim AS dev-env
 
-# Required by `openssl-sys` crate, a dependency for `grcov`
+# Required by `openssl-sys` crate, a dependency for `grcov` (code coverage)
 RUN apt-get update \
         && apt-get install -y --no-install-recommends cmake libssl-dev pkg-config \
         && rm -rf /var/lib/apt/lists/*
@@ -29,8 +29,9 @@ RUN rustup component add rustfmt
 # Required for linting (style, complexity, ...)
 RUN rustup component add clippy
 
-# Required for code coverage
+# Required for code coverage measurement
 RUN cargo install grcov
+RUN rustup component add llvm-tools-preview
 
 # Required for REPL
 RUN cargo install cargo-watch

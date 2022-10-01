@@ -62,7 +62,7 @@ clean-containers: ## Stop and remove produced containers, networks, and volumes
 .PHONY: clean-files
 clean-files:
 	@echo "\033[47m\033[30m\033[1m🧹 $@ \033[0m"
-	find . -name '*~' -exec rm --force  {} +
+	find . \( -name '*~' -o -name '*.profraw' \) -exec rm --force  {} +
 
 .PHONY: doc
 doc: build-dev ## Generate and serve developer documentation (cargo doc)
@@ -140,6 +140,33 @@ security-sca: build-dev ## Launch Software Composition Analysis (cargo-audit)
 	$(DOCKER) run --rm                                                     \
 	    '${PROJECT}:dev'                                                   \
 	    cargo audit
+
+.PHONY: coverage
+coverage: build-dev ## Measure code coverage (source-based grcov)
+	@echo "\033[101m\033[30m\033[1m📐 $@ \033[0m"
+	$(DOCKER) run --rm                                                     \
+	    --env CARGO_INCREMENTAL=0                                          \
+	    --env RUSTFLAGS='-Cinstrument-coverage -Clink-dead-code'           \
+	    --env LLVM_PROFILE_FILE='profiler-%p-%m.profraw'                   \
+	    --env RUST_LOG='trace'                                             \
+	    --mount type=bind,target='/coverage',src='${CURDIR}'/.coverage     \
+	    '${PROJECT}:dev'                                                   \
+	    bash -c '                                                          \
+	      cargo test --tests --no-fail-fast                                \
+	      && for format in lcov html; do                                   \
+	         grcov .                                                       \
+	           --binary-path ./target/debug/deps/                          \
+	           --source-dir .                                              \
+	           --branch                                                    \
+	           --ignore-not-existing                                       \
+	           --ignore "../*"                                             \
+	           --ignore "/*"                                               \
+	           --output-type $${format}                                    \
+	           --output-path /coverage/$${format}                          \
+	         ; done                                                        \
+	      && chown -R ${CURRENT_UID}:${CURRENT_GID} /coverage              \
+	    '
+
 
 .PHONY: run
 run: run-release ## Locally run the application (release stack)
