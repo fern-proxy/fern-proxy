@@ -1,4 +1,10 @@
 # SPDX-FileCopyrightText:  Copyright © 2022 The Fern Authors <team@fernproxy.io>
 # SPDX-License-Identifier: Apache-2.0
 
+# Ensure a `.coverage` directory always exists
+!/.coverage
+/.coverage/*
+!/.coverage/.gitkeep
+
+# Build artifacts are happier outside of source control
 /target

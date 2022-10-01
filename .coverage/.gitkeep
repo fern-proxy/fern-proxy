@@ -1,0 +1,6 @@
+# SPDX-FileCopyrightText:  Copyright © 2022 The Fern Authors <team@fernproxy.io>
+# SPDX-License-Identifier: Apache-2.0
+
+There is nothing in this file, except this info message to explain we want
+to keep it. The sole purpose of this `.gitkeep` is to ensure a `.coverage`
+directory always exists, as it simplifies writing the `make coverage` target.
