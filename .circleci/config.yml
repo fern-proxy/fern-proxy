@@ -8,14 +8,17 @@
 #TODO(ppiotr3k): export test results in JUnit format for enhanced integration
 # -> https://circleci.com/docs/collect-test-data#overview
 # -> ? https://github.com/johnterickson/cargo2junit
-#TODO(ppiotr3k): add code coverage generation and export
-# -> https://circleci.com/docs/code-coverage
 #TODO(ppiotr3k): skip Rust tasks for changes in irrelevant files
 
 
 # Use version 2.1 of CircleCI pipeline process engine.
 # See: https://circleci.com/docs/2.1/configuration-reference
 version: 2.1
+
+# Orbs required by this pipeline for integrations with third-party tools.
+# See: https://circleci.com/docs/orb-intro
+orbs:
+  codecov: codecov/codecov@3.2.3
 
 # Pipeline-wide parameters, always in scope, for all jobs, workflows, etc.
 # See: https://circleci.com/docs/pipeline-variables#pipeline-value-scope
@@ -195,7 +198,55 @@ jobs:
           command: make build
 
 
-# Invoke jobs via workflows
+  measure-code-coverage:
+    # Specs: https://circleci.com/product/features/resource-classes/
+    resource_class: large
+    machine:
+      # Versions: https://circleci.com/developer/images?imageType=machine
+      image: ubuntu-2204:2022.07.1
+      # DLC volumes are deleted after 3 days of not being used in a job.
+      # See: https://circleci.com/docs/docker-layer-caching#how-dlc-works
+      #TODO(ppiotr3k): evaluate 'DLC' vs 'docker build --cache-from'
+      docker_layer_caching: true
+    working_directory: ~/fern-proxy/
+
+    steps:
+      # Checkout source.
+      # A version prefix is used should cache need manual invalidation.
+      # See: https://circleci.com/docs/caching#clearing-cache
+      - restore_cache:
+          # A 'measure-code-coverage' should always happen after a 'pre-checks',
+          # therefore required cache should have been created previously.
+          keys:
+            - git-v<< pipeline.parameters.cache-version >>-{{ .Branch }}-{{ .Revision }}
+      - checkout
+
+      # Restore artifact cache.
+      # A version prefix is used should cache need manual invalidation.
+      # See: https://circleci.com/docs/caching#clearing-cache
+      - restore_cache:
+          # A 'measure-code-coverage' should always happen after a 'pre-checks',
+          # therefore required cache should have been created previously.
+          keys:
+            - cargo-v<< pipeline.parameters.cache-version >>-{{ arch }}-{{ checksum "Cargo.lock" }}
+      - restore_cache:
+          # A 'measure-code-coverage' should always happen after a 'build-native',
+          # therefore required cache should have been created previously.
+          keys:
+            - target-v<< pipeline.parameters.cache-version >>-{{ arch }}-{{ checksum "Cargo.lock" }}
+
+      # Measure code coverage, store HTML report as artifact, upload LCOV report to Codecov.
+      # This is where the actual content of this CI job happens.
+      - run:
+          name: Run `make coverage` [unoptimized + debuginfo + instrument-coverage]
+          command: make coverage
+      - store_artifacts:
+          path: .coverage/html
+      - codecov/upload:
+          file: .coverage/lcov
+
+
+# Invoke jobs via workflows.
 # See: https://circleci.com/docs/2.1/configuration-reference/#workflows
 workflows:
   # Pinning the version enables warnings for deprecation or breaking changes
@@ -226,6 +277,20 @@ workflows:
       # - pull requests to `dev` or `main` branches (regular git-flow)
       # - code commits to `dev` or `main` branches (shouldn't happen per git-flow)
       - build-container:
+          filters:
+            branches:
+              only:
+                - dev
+                - main
+          requires:
+            - pre-checks
+
+      # To monitor risk of introducing code with undetected software defects
+      # when moving forward in the code delivery pipeline,
+      # a longer code coverage measurement is only performed in following cases:
+      # - pull requests to `dev` or `main` branches (regular git-flow)
+      # - code commits to `dev` or `main` branches (shouldn't happen per git-flow)
+      - measure-code-coverage:
           filters:
             branches:
               only:
