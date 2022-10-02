@@ -1,7 +1,7 @@
 # SPDX-FileCopyrightText:  Copyright © 2022 The Fern Authors <team@fernproxy.io>
 # SPDX-License-Identifier: Apache-2.0
 
-FROM rust:1.63 AS build-env
+FROM rust:1.64 AS build-env
 
 WORKDIR /app
 COPY . .
@@ -16,7 +16,7 @@ WORKDIR /app
 CMD [ "./fern-proxy" ]
 
 
-FROM rust:1.63-slim AS dev-env
+FROM rust:1.64-slim AS dev-env
 
 # Required by `openssl-sys` crate, a dependency for `grcov` (code coverage)
 RUN apt-get update \

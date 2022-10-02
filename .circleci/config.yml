@@ -40,7 +40,7 @@ jobs:
     resource_class: medium
     docker:
       # Versions: https://circleci.com/developer/images/image/cimg/rust
-      - image: cimg/rust:1.63.0
+      - image: cimg/rust:1.64.0
     working_directory: ~/fern-proxy/
 
     steps:
@@ -113,7 +113,7 @@ jobs:
     resource_class: small
     docker:
       # Versions: https://circleci.com/developer/images/image/cimg/rust
-      - image: cimg/rust:1.63.0
+      - image: cimg/rust:1.64.0
     working_directory: ~/fern-proxy/
 
     steps:
