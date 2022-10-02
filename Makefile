@@ -4,7 +4,7 @@
 PROJECT := fern-proxy
 
 COMPOSE = docker-compose -p $(PROJECT)
-DOCKER  = DOCKER_BUILDKIT=1 docker
+DOCKER  = DOCKER_BUILDKIT=1 $(if $(CI),BUILDKIT_PROGRESS=plain) docker
 
 
 SHELL = /bin/sh
