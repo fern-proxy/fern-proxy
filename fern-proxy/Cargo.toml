@@ -4,8 +4,8 @@
 [package]
 name = "fern-proxy"
 license = "Apache-2.0"
-version = "0.1.0"
-documentation = "https://docs.rs/fern-proxy/0.1.0/"
+version = "0.1.1"
+documentation = "https://docs.rs/fern-proxy/0.1.1/"
 repository = "https://github.com/fern-proxy/fern-proxy/"
 homepage = "https://fernproxy.io/"
 description = "Cloud Native high performance security and privacy SQL proxy."
@@ -33,14 +33,17 @@ publish = false
 [dependencies.fern-masking]
 features = []
 version = "0.1"
+path = "../fern-masking/embedded/"
 
 [dependencies.fern-proxy-interfaces]
 features = []
-version = "0.1"
+version = "0.2"
+path = "../fern-proxy-interfaces/"
 
 [dependencies.fern-protocol-postgresql]
 features = []
 version = "0.1"
+path = "../fern-wire-protocols/postgresql/"
 
 [dependencies.config]
 default-features = false

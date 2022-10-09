@@ -8,7 +8,7 @@ use tokio::io::{AsyncRead, AsyncWrite, Result};
 use tokio::sync::mpsc;
 use tokio_util::codec::{Decoder, Encoder, FramedRead, FramedWrite};
 
-use fern_proxy_interfaces::{SQLHandlerConfig, SQLMessage, SQLMessageHandler};
+use fern_proxy_interfaces::{SQLMessage, SQLMessageHandler, SharedConnectionContext};
 
 /// Direction of Messages flow in a `Pipe`.
 #[derive(Debug)]
@@ -71,14 +71,14 @@ where
         receiver: R,
         sender: W,
         short_circuit: ShortCircuit<I, S>,
-        config: &SQLHandlerConfig,
+        ctx: &SharedConnectionContext,
     ) -> Pipe<R, W, C, I, S, H> {
         // Adapt from `AsyncRead`/ `AsyncWrite` to `Stream`/`Sink`.
         Pipe {
             direction,
             stream: FramedRead::new(receiver, C::default()),
             sink: FramedWrite::new(sender, C::default()),
-            frame_handlers: H::new(config),
+            frame_handlers: H::new(ctx),
             _short_circuit: short_circuit,
         }
     }
@@ -151,13 +151,13 @@ where
 
 ///TODO(ppiotr3k): write struct description
 #[derive(Debug)]
-pub struct ShortCircuit<I, S> {
+pub struct ShortCircuit<R, S> {
     _tx: mpsc::Sender<S>,
-    _rx: mpsc::Receiver<I>,
+    _rx: mpsc::Receiver<R>,
 }
 
-impl<I, S> ShortCircuit<I, S> {
-    pub fn new(tx: mpsc::Sender<S>, rx: mpsc::Receiver<I>) -> ShortCircuit<I, S> {
+impl<R, S> ShortCircuit<R, S> {
+    pub fn new(tx: mpsc::Sender<S>, rx: mpsc::Receiver<R>) -> ShortCircuit<R, S> {
         ShortCircuit { _tx: tx, _rx: rx }
     }
 }

@@ -4,8 +4,8 @@
 [package]
 name = "fern-proxy-interfaces"
 license = "Apache-2.0"
-version = "0.1.0"
-documentation = "https://docs.rs/fern-proxy-interfaces/0.0.0/"
+version = "0.2.0"
+documentation = "https://docs.rs/fern-proxy-interfaces/0.2.0/"
 repository = "https://github.com/fern-proxy/fern-proxy/"
 homepage = "https://fernproxy.io/"
 description = "Interfaces definitions used by Fern proxy components."

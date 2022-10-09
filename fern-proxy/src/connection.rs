@@ -6,8 +6,9 @@ use tokio::net::TcpStream;
 use tokio::sync::mpsc;
 
 use crate::pipe::{Direction, Pipe, ShortCircuit};
-use fern_masking::{DataMaskingHandler, PassthroughHandler, SQLHandlerConfig};
+use fern_masking::{DataMaskingHandler, PassthroughHandler};
 use fern_protocol_postgresql::codec::{backend, frontend};
+use fern_proxy_interfaces::ConnectionContext;
 
 //TODO(ppiotr3k): write description
 #[derive(Debug)]
@@ -36,16 +37,19 @@ pub struct Connection {
 impl Connection {
     /// Creates a new connection for proxying provided `client_socket` and `server_socket`.
     #[rustfmt::skip]
-    pub async fn new(client_socket: TcpStream, server_socket: TcpStream, config: &SQLHandlerConfig) -> Connection {
+    pub async fn new(client_socket: TcpStream, server_socket: TcpStream, config: &config::Config) -> Connection {
+        // Create a context local to this `Connection` to share data with Handlers.
+        let ctx = ConnectionContext::new(config);
+
         // Split the sockets to be able to `Pipe` them together.
         let (client_rx, client_tx) = client_socket.into_split();
         let (server_rx, server_tx) = server_socket.into_split();
 
         // Create channels to allow short-circuiting regular Message flows.
-        let (forward_tx, forward_rx) = mpsc::channel::<backend::Message>(128);
-        let (backward_tx, backward_rx) = mpsc::channel::<frontend::Message>(128);
-        let forward_short = ShortCircuit::new(forward_tx, backward_rx);
-        let backward_short = ShortCircuit::new(backward_tx, forward_rx);
+        let (forward_tx, forward_rx) = mpsc::channel::<frontend::Message>(128);
+        let (backward_tx, backward_rx) = mpsc::channel::<backend::Message>(128);
+        let forward_short = ShortCircuit::new(backward_tx, forward_rx);
+        let backward_short = ShortCircuit::new(forward_tx, backward_rx);
 
         // Create `Pipe` instance for regular Client -> proxied Server Message flows.
         let forward_pipe = Pipe::new(
@@ -53,7 +57,7 @@ impl Connection {
             client_rx,
             server_tx,
             forward_short,
-            config,
+            &ctx,
         );
 
         // Create `Pipe` instance for regular proxied Server -> Client Message flows.
@@ -62,7 +66,7 @@ impl Connection {
             server_rx,
             client_tx,
             backward_short,
-            config,
+            &ctx,
         );
 
         Connection {

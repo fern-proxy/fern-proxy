@@ -4,8 +4,8 @@
 [package]
 name = "fern-masking"
 license = "Apache-2.0"
-version = "0.1.1"
-documentation = "https://docs.rs/fern-masking/0.1.1/"
+version = "0.1.2"
+documentation = "https://docs.rs/fern-masking/0.1.2/"
 repository = "https://github.com/fern-proxy/fern-proxy/"
 homepage = "https://fernproxy.io/"
 description = "Embedded data masking handlers for Fern proxy."
@@ -34,10 +34,12 @@ publish = false
 [dependencies.fern-protocol-postgresql]
 features = []
 version = "0.1"
+path = "../../fern-wire-protocols/postgresql/"
 
 [dependencies.fern-proxy-interfaces]
 features = []
-version = "0.1"
+version = "0.2"
+path = "../../fern-proxy-interfaces/"
 
 [dependencies.async-trait]
 version = "0.1"

@@ -5,12 +5,9 @@ use async_trait::async_trait;
 use bytes::Bytes;
 
 use fern_protocol_postgresql::codec::backend;
-use fern_proxy_interfaces::{SQLMessage, SQLMessageHandler};
+use fern_proxy_interfaces::{SQLMessage, SQLMessageHandler, SharedConnectionContext};
 
 use crate::strategies::MaskingStrategy;
-
-// Re-export.
-pub use fern_proxy_interfaces::SQLHandlerConfig;
 
 /// An `SQLMessageHandler` applying a data masking strategy.
 ///
@@ -48,10 +45,13 @@ enum QueryState {
 //TODO(ppiotr3k): this crate should only process abstracted types
 #[async_trait]
 impl SQLMessageHandler<backend::Message> for DataMaskingHandler {
-    fn new(config: &SQLHandlerConfig) -> Self {
+    fn new(context: &SharedConnectionContext) -> Self {
+        // Acquire a reader lock on `context`.
+        let ctx = context.read().unwrap();
+
         //TODO(ppiotr3k): make length configurable
         let strategy: Box<dyn MaskingStrategy> =
-            if let Ok(strategy) = config.get::<String>("masking.strategy") {
+            if let Ok(strategy) = ctx.config.get::<String>("masking.strategy") {
                 match strategy.as_str() {
                     "caviar" => Box::new(strategies::CaviarMask::new(6)),
                     "caviar-preserve-shape" => Box::new(strategies::CaviarShapeMask::new()),
@@ -63,14 +63,14 @@ impl SQLMessageHandler<backend::Message> for DataMaskingHandler {
             };
 
         let mut columns_excluded = vec![];
-        if let Ok(columns) = config.get::<Vec<String>>("masking.exclude.columns") {
+        if let Ok(columns) = ctx.config.get::<Vec<String>>("masking.exclude.columns") {
             for column_name in columns.iter() {
                 columns_excluded.push(Bytes::from(column_name.clone()));
             }
         }
 
         let mut columns_forced = vec![];
-        if let Ok(columns) = config.get::<Vec<String>>("masking.force.columns") {
+        if let Ok(columns) = ctx.config.get::<Vec<String>>("masking.force.columns") {
             for column_name in columns.iter() {
                 columns_forced.push(Bytes::from(column_name.clone()));
             }
@@ -157,7 +157,7 @@ impl<M> SQLMessageHandler<M> for PassthroughHandler<M>
 where
     M: SQLMessage,
 {
-    fn new(_config: &SQLHandlerConfig) -> Self {
+    fn new(_context: &SharedConnectionContext) -> Self {
         Self {
             _phantom: std::marker::PhantomData,
         }
