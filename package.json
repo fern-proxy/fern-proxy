@@ -1,0 +1,35 @@
+{
+  "name": "fern-proxy",
+  "version": "0.0.1",
+  "main": "index.js",
+  "repository": "https://github.com/s0j0hn/fern-proxy.git",
+  "author": "",
+  "license": "LICENSE",
+  "private": false,
+  "devDependencies": {
+    "@commitlint/cli": "^17.1.2",
+    "@commitlint/config-conventional": "^17.1.0",
+    "@commitlint/cz-commitlint": "^17.1.2",
+    "@commitlint/prompt-cli": "^17.1.2",
+    "commitizen": "^4.2.5",
+    "commitizen-emoji": "^1.0.5",
+    "commitlint": "^17.1.2",
+    "commitlint-config-gitmoji": "^2.2.6",
+    "commitlint-plugin-gitmoji": "^2.2.0",
+    "conventional-changelog-gitmoji": "^0.2.5",
+    "cz-conventional-changelog": "3.3.0",
+    "cz-emoji": "^1.3.2-canary.2",
+    "inquirer": "8"
+  },
+  "scripts": {
+    "commit": "cz"
+  },
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/commitizen-emoji"
+    },
+    "commitizenEmoji": {
+      "conventionalFormat": true
+    }
+  }
+}
