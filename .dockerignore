@@ -16,3 +16,4 @@ target
 Dockerfile
 LICENSE
 Makefile
+.idea

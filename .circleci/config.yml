@@ -245,6 +245,62 @@ jobs:
       - codecov/upload:
           file: .coverage/lcov
 
+  commits-lint:
+  # Add this lint job to your workflow to easily enable commit message lint checking as a step in your CI process.
+    docker:
+      - image: cimg/node:lts
+    parameters:
+      config-path:
+          default: ./commitlint.config.js
+          description: Path to commitlint config file
+          type: string
+      max-count:
+          default: 10
+          description: The maximum number of commits to lint.
+          type: integer
+      target-branch:
+          default: main
+          description: Commits in the current branch will be compared against the target branch for linting. All commits not present in the target branch will be linted.
+          type: string
+    steps:
+      - checkout
+      - run: yarn
+      - run:
+          command: |
+              #!/bin/bash
+              if ! command -v commitlint &> /dev/null
+              then
+                if [[ $EUID == 0 ]]; then export SUDO=""; else export SUDO="sudo"; fi
+                $SUDO npm install -g @commitlint/cli 
+              fi
+      
+              current_branch="$(git rev-parse --abbrev-ref HEAD)"
+              target_branch="$CL_PARAM_TARGET_BRANCH"
+              git_log="$(git log --reverse --max-count="$CL_PARAM_MAX_COUNT" --format="format:%H")"
+      
+              if [ -z "$git_log" ]; then
+                echo "[WARNING] There are no commits in the log to lint."
+                exit 0
+              fi
+      
+              # If there is only one commit, set target_head to that commit
+              if [ "$(echo "$git_log" | wc -l | xargs)" == "1" ]; then
+                target_head=""
+              elif [ "$current_branch" != "$target_branch" ]; then
+                # Using the ^ at the end git logs lower bound is not inclusive
+                target_head="$(git cherry "$target_branch" | head -1 | cut -d " " -f2-)^"
+              else
+                commit="$(echo "$git_log" | head -1)"
+                target_head="$(git log "$commit^" -1 --pretty=%H)"
+              fi
+      
+              commitlint --verbose --config "$CL_PARAM_CONFIG_PATH" --from="$target_head"
+          environment:
+              CL_PARAM_CONFIG_PATH: <<parameters.config-path>>
+              CL_PARAM_MAX_COUNT: <<parameters.max-count>>
+              CL_PARAM_TARGET_BRANCH: <<parameters.target-branch>>
+          name: Run commitlint
+
 
 # Invoke jobs via workflows.
 # See: https://circleci.com/docs/2.1/configuration-reference/#workflows
@@ -256,9 +312,17 @@ workflows:
   # Note: builds for pull requests from forked repositories are blocked in CircleCI config.
   ci-build:
     jobs:
+      # Ensure all commits are properly formatted
+      - commits-lint:
+          target-branch: 'dev'
+          filters:
+            branches:
+              ignore:
+                - main
       # Pre-checks are mandatory whatever is the branch.
-      - pre-checks
-
+      - pre-checks:
+          requires:
+            - commits-lint
       # To speed up developer feedback loop, and support the 'fail-fast' approach,
       # a fast 'native' build is always performed in following cases:
       # - code commits to all branches, except `dev` and `main`

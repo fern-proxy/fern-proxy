@@ -8,3 +8,9 @@
 
 # Build artifacts are happier outside of source control
 /target
+
+# JetBrains IDE
+.idea/
+
+# Node.JS
+node_modules/
